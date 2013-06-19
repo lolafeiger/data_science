@@ -1,0 +1,7 @@
+ggplot(data=cafedata) + aes(x=borough) + geom_histogram() + xlab("New York City Borough") + ylab("Number of Permits") + ggtitle("Sidewalk Cafe Permits Issued 2012") + theme_bw()
+p1 <- ggplot(data=cafedata) + aes(x=borough) + geom_histogram() + xlab("New York City Borough") + ylab("Number of Permits") + ggtitle("Sidewalk Cafe Permits Issued 2012") + theme_bw()
+ddply(cafedata, "borough", summarise, number=median(size))
+x <- ddply(cafedata, "borough", summarise, number=median(size))
+ggplot(data=x) + aes(x=borough, y=number) + geom_histogram() + xlab("New York City Borough") + ylab("Area (Sq.Ft.)") + ggtitle("Median Sidewalk Cafe Size, 2012") + theme_bw()
+p2 <- ggplot(data=x) + aes(x=borough, y=number) + geom_histogram() + xlab("New York City Borough") + ylab("Area (Sq.Ft.)") + ggtitle("Median Sidewalk Cafe Size, 2012") + theme_bw()
+multiplot(p1, p2, cols=2)
