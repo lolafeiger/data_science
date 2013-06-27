@@ -1,0 +1,324 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1138\cocoasubrtf510
+{\fonttbl\f0\fswiss\fcharset0 Helvetica;\f1\fnil\fcharset0 Consolas;\f2\fswiss\fcharset0 ArialMT;
+\f3\fnil\fcharset0 LucidaGrande;\f4\fmodern\fcharset0 Courier;}
+{\colortbl;\red255\green255\blue255;\red38\green38\blue38;\red246\green246\blue246;\red54\green14\blue63;
+\red255\green255\blue255;\red38\green38\blue38;\red26\green26\blue26;\red246\green246\blue246;\red54\green14\blue63;
+\red230\green87\blue141;}
+\margl1440\margr1440\vieww17400\viewh12580\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural
+
+\f0\fs24 \cf0 #loading the data (train.csv) and assigning it a name (df)\
+\
+> df <- read.csv('/Users/lolafeiger/data_science/GADS4/data/kaggle_salary/train.csv')\
+> nrow(df)\
+\
+#rooting around in train.csv to see what I'm working with\
+> names(df)\
+\
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural
+\cf0 > unique(df$"ContractTime")\
+\
+> unique(df$"ContractType")\
+\
+> summary(df$Category)\
+\
+\pard\pardeftab720\sl380
+
+\f1\fs26 \cf2 \cb3 > table(df$ContractType, df$ContractTime)
+\f0\fs24 \cf0 \cb1 \
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural
+\cf0 \
+#creating a new variable of the top ten 
+\i professions
+\i0  represented in the data, as well as a separate level to which all the NAs are assigned\
+\
+\pard\pardeftab720\sa260
+
+\f2\fs26 \cf4 \cb5 > category.counts <-summary(df$Category)\
+> top.categories <- names(category.counts[order(category.counts, decreasing= T)][1:10])\
+\pard\pardeftab720\sl360\sa260
+
+\f3 \cf6 > df$NewCategoryFeature <- factor(df$Category, levels=top.categories)
+\f2 \cf7 \
+
+\f3 \cf6 > addNA(df
+\fs24 \cb8 $
+\fs26 \cb5 NewCategoryFeature)
+\f0\fs24 \cf0 \cb1 \
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural
+\cf0 > unique(df$NewCategoryFeature)\
+\
+#I saw here that there were still only 10 levels, so I viewed the data to see if there were still NAs listed, and there were\
+\
+> View(df$NewCategoryFeature)\
+\
+> length(levels(df$NewCategoryFeature))\
+[1] 10\
+\
+#so I tried to fix this\
+> df$NewCategoryFeature <- addNA(df$NewCategoryFeature)\
+\
+> length(levels(df$NewCategoryFeature))\
+[1] 11
+\f2\fs26 \cf7 \cb5 \
+
+\f0\fs24 \cf0 \cb1 \
+#creating a new variable of the top ten
+\i  locations
+\i0  (LocationNormalized) represented in the data, as well as a separate level to which all the NAs are assigned\
+\
+\pard\pardeftab720\sa260
+
+\f2\fs26 \cf9 > locations.counts <-summary(df$LocationNormalized)\
+> top.locations <- names(locations.counts[order(locations.counts, decreasing= T)][1:10])\
+\pard\pardeftab720\sl360\sa260
+
+\f3 \cf2 > df$NewLocationFeature <- factor(df$LocationNormalized, levels=top.locations)\
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural
+
+\f0\fs24 \cf0 > df$NewLocationFeature <- addNA(df$NewLocationFeature)\
+\
+> length(levels(df$NewLocationFeature))\
+[1] 11
+\f3\fs26 \cf2 \
+\pard\pardeftab720\sl340
+\cf2 \
+\pard\pardeftab720\sl360\sa260
+\cf2 #splitting the original training file (df) into a training set (train.data) and a test set (test.data), and checking the number of rows to see that it actually worked\
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural
+
+\f0\fs24 \cf0 > nrow(df)\
+\
+> N <- nrow(df)\
+\
+> train.pct <- .7\
+\
+> train.idx <- sample(1:N, train.pct* N)\
+\
+> train.data <- df[train.idx, ]\
+\
+> test.data <- df[-train.idx, ]\
+\
+> nrow(train.data)\
+\
+>nrow (test.data)\
+\
+#creating a model and seeing how significant the variables are as well as its overall R squared \
+\
+\pard\pardeftab720\sl360\sa260
+
+\f3\fs26 \cf2 > model <- lm(SalaryNormalized ~ NewCategoryFeature + NewLocationFeature + ContractTime + ContractType, data=train.data)\
+> summary(model)\
+\cf10 Call:\
+lm(formula = SalaryNormalized ~ NewCategoryFeature + NewLocationFeature + \
+    ContractTime + ContractType, data = train.data)\
+\
+Residuals:\
+   Min     1Q Median     3Q    Max \
+-37046  -8127  -2808   5608 132177 \
+\
+Coefficients:\
+                                              Estimate Std. Error t value Pr(>|t|)    \
+(Intercept)                                    31515.2      589.2  53.487  < 2e-16 ***\
+NewCategoryFeatureIT Jobs                       5779.6      739.1   7.820 6.07e-15 ***\
+NewCategoryFeatureEngineering Jobs             -1052.8      751.0  -1.402 0.160990    \
+NewCategoryFeatureAccounting & Finance Jobs     2437.9      831.4   2.932 0.003376 ** \
+NewCategoryFeatureHR & Recruitment Jobs        -3890.0      880.0  -4.420 1.00e-05 ***\
+NewCategoryFeatureHospitality & Catering Jobs -10874.1      840.9 -12.931  < 2e-16 ***\
+NewCategoryFeatureSales Jobs                   -5812.6      962.9  -6.037 1.65e-09 ***\
+NewCategoryFeatureTeaching Jobs                -9773.7     1044.0  -9.362  < 2e-16 ***\
+NewCategoryFeatureCustomer Services Jobs      -14095.4     1139.3 -12.372  < 2e-16 ***\
+NewCategoryFeatureOther/General Jobs           -5855.0     1218.9  -4.803 1.59e-06 ***\
+NewCategoryFeatureNA                           -6179.2      654.5  -9.441  < 2e-16 ***\
+NewLocationFeatureLondon                        9864.6      750.5  13.143  < 2e-16 ***\
+NewLocationFeatureManchester                   -4272.9     1123.2  -3.804 0.000143 ***\
+NewLocationFeatureLeeds                        -5783.3     1215.3  -4.759 1.99e-06 ***\
+NewLocationFeatureBelfast                       -132.8     1331.2  -0.100 0.920538    \
+NewLocationFeatureBirmingham                   -2848.2     1490.8  -1.911 0.056097 .  \
+NewLocationFeatureThe City                      9054.6     1578.7   5.735 1.01e-08 ***\
+NewLocationFeatureSurrey                         -40.8     1588.9  -0.026 0.979514    \
+NewLocationFeatureSheffield                    -2839.1     1746.8  -1.625 0.104140    \
+NewLocationFeatureNA                           -1310.7      521.2  -2.515 0.011940 *  \
+ContractTimecontract                           10418.2      838.5  12.425  < 2e-16 ***\
+ContractTimepermanent                           3975.2      543.3   7.317 2.81e-13 ***\
+ContractTypefull_time                            311.1      403.8   0.770 0.441064    \
+ContractTypepart_time                          -7703.7      796.2  -9.675  < 2e-16 ***\
+---\
+Signif. codes:  0 \'91***\'92 0.001 \'91**\'92 0.01 \'91*\'92 0.05 \'91.\'92 0.1 \'91 \'92 1 \
+Residual standard error: 14210 on 6976 degrees of freedom\
+Multiple R-squared: 0.2211,	Adjusted R-squared: 0.2186 \
+F-statistic: 86.11 on 23 and 6976 DF,  p-value: < 2.2e-16 \cf2 \
+#writing the function for mean absolute error with which to assess the quality/validity of the model\
+> mae <- function(x,y)\
++ \{\
++     sum( abs(x-y) ) /length(x)\
++ \}\
+#testing the model on the test set\
+> model <- lm(SalaryNormalized ~ NewCategoryFeature + NewLocationFeature + ContractTime + ContractType, data=train.data)
+\f0\fs24 \cf0 \
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural
+\cf0 > predictions <- predict(model)\
+\
+> plot(train.data$SalaryNormalized, predictions)\
+
+\f3\fs26 \cf2 \
+\pard\pardeftab720\sl360\sa260
+\cf2 > test.predict <- predict(model, test.data)\
+> mae(test.predict, test.data$SalaryNormalized)\
+[1] 10205.45\
+#trying a new model to see how it compares in both R squared and MAE\
+> model1 <- lm(SalaryNormalized ~ NewCategoryFeature + NewLocationFeature + ContractTime * ContractType, data=train.data)\
+> summary(model1)\
+\cf10 Multiple R-squared: 0.2255,	Adjusted R-squared: 0.2226 \cf2 \
+> test.predict1 <- predict(model1, test.data)\
+> mae(test.predict1, test.data$SalaryNormalized)\
+[1] 10196.83\
+> mae(predict(model1, test.data), test.data$SalaryNormalized)\
+[1] 10196.83\
+#attempting to merge the location_tree file\
+> location_info <- read.table('~/data_science/GADS4/data/kaggle_salary/Location_Tree_reformatted.csv', sep=",", fill=T, col.names=c('Country', 'City', 'City Detailed', 'More Detailed', 'Town', 'Neighborhood','extra'))\
+> View(location_info)\
+> nrow(location_info)\
+[1] 14614\
+> library(DAAG)\
+>?cv.lm\
+> 
+\f4 \cf0 CVlm(df = houseprices, form.lm = formula(sale.price ~ area), m=3, dots =\
+\pard\pardeftab720
+\cf0 FALSE, seed=29,  plotit = c("Observed","Residual"),\
+main="Small symbols show cross-validation predicted values",\
+legend.pos="topleft", printit=TRUE)\
+\
+\pard\pardeftab720\sl360\sa260
+
+\f3 \cf2 > cv.lm(df = df, form.lm = lm(SalaryNormalized ~ NewCategoryFeature + NewLocationFeature + ContractTime * ContractType), m=10, dots = FALSE, seed=29, plotit = c("Observed","Residual"),main="Small symbols show cross-validation predicted values",legend.pos="topleft", printit=TRUE)\
+Error in eval(expr, envir, enclos) : object 'SalaryNormalized' not found\
+> cv.lm(df = df, form.lm = lm("SalaryNormalized" ~ NewCategoryFeature + NewLocationFeature + ContractTime * ContractType), m=10, dots = FALSE, seed=29, plotit = c("Observed","Residual"),main="Small symbols show cross-validation predicted values",legend.pos="topleft", printit=TRUE)\
+Error in terms.formula(formula, data = data) : \
+  invalid term in model formula\
+> library('ROCR')\
+#an unsuccessful attempt at cv.lm, followed by unsuccessful attempts/ran out of time with glm & cv.glmnet\
+\pard\pardeftab720\sl380
+
+\f1\fs24 \cf6 \cb8 # Finally, we need to work with the actual test data\
+> realtest <- read.csv('/Users/lolafeiger/data_science/GADS4/data/kaggle_salary/test.csv')\
+\
+# We should train our final model with all the training data\
+> finalmodel <- lm(
+\f3\fs26 \cf2 \cb1 SalaryNormalized ~ NewCategoryFeature + NewLocationFeature + ContractTime * ContractType
+\f1\fs24 \cf6 \cb8 , data=df)\
+\
+predictions <- predict(finalmodel, realtest)\
+Error in eval(expr, envir, enclos) : \
+  object 'NewCategoryFeature' not found\
+\
+#need to create NewCategoryFeature and NewLocationFeature in the test data!\
+\
+\pard\pardeftab720\sa260
+
+\f2\fs26 \cf9 \cb1 > category.counts1 <-summary(realtest$Category)\
+> top.categories1 <- names(category.counts1[order(category.counts1, decreasing= T)][1:10])\
+\pard\pardeftab720\sl360\sa260
+
+\f3 \cf2 > realtest$NewCategoryFeature <- factor(realtest$Category, levels=top.categories1)\
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardeftab720\pardirnatural
+
+\f0\fs24 \cf0 >  realtest$NewCategoryFeature <- addNA(realtest$NewCategoryFeature)\
+\
+> length(levels(realtest$NewCategoryFeature))
+\f1 \cf6 \cb8 \
+\pard\pardeftab720\sl380
+\cf6 \
+\
+\pard\pardeftab720\sa260
+
+\f2\fs26 \cf9 \cb1 > locations.counts1 <-summary(realtest$LocationNormalized)\
+> top.locations1 <- names(locations.counts1[order(locations.counts1, decreasing= T)][1:10])\
+\pard\pardeftab720\sl360\sa260
+
+\f3 \cf2 > realtest$NewLocationFeature <- factor(realtest$LocationNormalized, levels=top.locations1)\
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardeftab720\pardirnatural
+
+\f0\fs24 \cf0 >  realtest$NewLocationFeature <- addNA(realtest$NewLocationFeature)\
+\
+> length(levels(realtest$NewLocationFeature))\
+\
+> finalmodel <- lm(SalaryNormalized ~ NewCategoryFeature + NewLocationFeature + ContractTime * ContractType, data=df)\
+\
+> predictions <- predict(finalmodel, realtest)\
+\
+Error in model.frame.default(Terms, newdata, na.action = na.action, xlev = object$xlevels) : \
+  factor 'NewCategoryFeature' has new level(s) PR, Advertising & Marketing Jobs\
+\
+#turns out I think I need to formalize the definition of these new features in the test set (realtest), since the top ten levels are not the same across training and test files.\
+\
+> unique(df$NewCategoryFeature)\
+ [1] Engineering Jobs            HR & Recruitment Jobs       Accounting & Finance Jobs  \
+ [4] Healthcare & Nursing Jobs   Other/General Jobs          Hospitality & Catering Jobs\
+ [7] IT Jobs                     Customer Services Jobs      <NA>                       \
+[10] Sales Jobs                  Teaching Jobs              \
+11 Levels: Healthcare & Nursing Jobs IT Jobs Engineering Jobs ... <NA>\
+\
+> unique(df$NewLocationFeature)\
+ [1] <NA>       Surrey     UK         Manchester Leeds      London     Birmingham The City   Sheffield \
+[10] Belfast   \
+Levels: (Other) UK London Manchester Leeds Belfast Birmingham The City Surrey Sheffield <NA>
+\f1 \cf6 \cb8 \
+\pard\pardeftab720\sl380
+\cf6 \
+\pard\pardeftab720\sl400
+
+\f3\fs26 \cf6 \cb5 realtest$NewCategoryFeature <- factor(realtest$NewCategoryFeature, levels=c(levels(realtest$NewCategoryFeature), "
+\f0\fs24 \cf0 \cb1 Engineering Jobs ", "HR & Recruitment Jobs", " Accounting & Finance Jobs ", "Healthcare & Nursing Jobs", "Other/General Jobs", "Hospitality & Catering Jobs", "IT Jobs", " Customer Services Jobs ", "  <NA>  ", " Sales Jobs  ", " Teaching Jobs"))\
+
+\f1 \cf6 \cb8 \
+\pard\pardeftab720\sl400
+
+\f3\fs26 \cf2 \cb1 realtest$NewLocationFeature <- factor(realtest$NewLocationFeature, levels=c(levels(realtest$NewCategoryFeature), "
+\f0\fs24 \cf0 Engineering Jobs ", "HR & Recruitment Jobs", " Accounting & Finance Jobs ", "Healthcare & Nursing Jobs", "Other/General Jobs", "Hospitality & Catering Jobs", "IT Jobs", " Customer Services Jobs ", "  <NA>  ", " Sales Jobs  ", " Teaching Jobs"))\
+\
+#that didn't work. tried something else.\
+\
+> realtest$NewCategoryFeature <- factor(realtest$NewCategoryFeature, levels=levels(df$NewCategoryFeature))\
+> unique(realtest$NewCategoryFeature)\
+\
+ [1] Engineering Jobs            IT Jobs                     <NA>                       \
+ [4] Healthcare & Nursing Jobs   Sales Jobs                  HR & Recruitment Jobs      \
+ [7] Other/General Jobs          Hospitality & Catering Jobs Teaching Jobs              \
+[10] Accounting & Finance Jobs  \
+10 Levels: Healthcare & Nursing Jobs IT Jobs Engineering Jobs ... Other/General Jobs\
+\
+> realtest$NewCategoryFeature <- addNA(realtest$NewCategoryFeature)\
+> unique(realtest$NewCategoryFeature)\
+\
+ [1] Engineering Jobs            IT Jobs                     <NA>                       \
+ [4] Healthcare & Nursing Jobs   Sales Jobs                  HR & Recruitment Jobs      \
+ [7] Other/General Jobs          Hospitality & Catering Jobs Teaching Jobs              \
+[10] Accounting & Finance Jobs  \
+11 Levels: Healthcare & Nursing Jobs IT Jobs Engineering Jobs ... <NA>\
+\
+> realtest$NewLocationFeature <- factor(realtest$NewLocationFeature, levels=levels(df$NewLocationFeature))\
+\
+> realtest$NewLocationFeature <- addNA(realtest$NewLocationFeature)\
+\
+> unique(realtest$NewLocationFeature)\
+[1] <NA>       UK         London     The City   Birmingham Manchester Leeds     \
+Levels: (Other) UK London Manchester Leeds Belfast Birmingham The City Surrey Sheffield <NA>\
+\pard\pardeftab720\sl400
+
+\f1 \cf6 \cb8 \
+\pard\pardeftab720\sl340
+
+\f3 \cf6 > finalmodel <- lm(SalaryNormalized ~ NewCategoryFeature + NewLocationFeature + ContractTime * ContractType, data=df)\
+\
+> predictions <- predict(finalmodel, realtest)
+\f1 \
+\pard\pardeftab720\sl380
+\cf6 # What are these predictions going to be?\
+\
+# Put the submission together and write it to a file\
+submission <- data.frame(Id=realtest$Id,\
+                         Salary=predictions)\
+write.csv(submission, "my_submission.csv", row.names=FALSE)
+\fs26 \
+}
